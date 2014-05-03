@@ -47,3 +47,14 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
   };
 });
 
+stuffAppControllers.controller('RegisterCtrl', function ($scope) {
+  $scope.dog = 'butler';
+});
+
+stuffAppControllers.controller('IsregCtrl', function ($scope, $location) {
+  $scope.dog = 'rusty';
+  var ret = JSON.parse(localStorage.getItem('s2g_user'));
+  if(!ret){$location.path('/register')} ;
+  //$location.path('/items') ;
+  console.log(!ret);
+});
