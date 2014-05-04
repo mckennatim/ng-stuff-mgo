@@ -135,10 +135,11 @@ exports.addList2user = function(req, res){
                   console.log('!undefined-name taken, choose another');
                   res.jsonp('name taken, choose another');
                 }else{
-                  collection.update({name:name},{$push:{lists:alist}}, {upsert:false}, function(err, saved) {
+                  var ulist = {lid:alist.lid, shops:alist.shops}
+                  collection.update({name:name},{$push:{lists:ulist}}, {upsert:false}, function(err, saved) {
                     if(err){res.jsonp(err)}else{
                       console.log('adding this list')
-                      res.jsonp(alist)};
+                      res.jsonp(ulist)};
                   });
                 }
               });
@@ -150,104 +151,6 @@ exports.addList2user = function(req, res){
   });
 };
 
-/*-------------------------PRODUCT functions---------------------------*/
-
-exports.findProductsByLid = function(req, res) {
-    console.log('in find products by lid');
-    console.log(req.params);
-    var lid = req.params.lid;
-    res.header("Access-Control-Allow-Origin", "*");
-    db.collection('products', function(err, collection) {
-        collection.find({lid:lid}).toArray(function(err, items) {
-            //console.log(items);
-            res.jsonp(items);
-        });
-    });
-};
-exports.findProductsDone4Lid = function(req, res) {
-  console.log('in products done 4 lid');
-  console.log(req.params);
-  var lid = req.params.lid;
-  db.collection('products', function(err, collection) {
-    collection.find({lid:lid,done:true}).toArray(function(err, items) {
-      //console.log(items);
-      res.jsonp(items);
-    });
-  });
-};
-exports.findProductsNeeded4Lid = function(req, res) {
-  console.log('in products needed 4 lid');
-  console.log(req.params);
-  var lid = req.params.lid;
-  db.collection('products', function(err, collection) {
-    collection.find({lid:lid,done:false}).toArray(function(err, items) {
-      console.log(items);
-      res.jsonp(items);
-    });
-  });
-};
-exports.updateProduct = function(req,res){
-  console.log('in updateProduct/:pid + getLidUpdTimestamp');
-  console.log(req.params);
-  var body=req.body;
-  var pid = ObjectId(req.params.pid);
-  getLidUpdTimestamp(db,pid,function(){
-    db.collection('products', function(err, collection) {
-      collection.update({_id:pid},{$set:body},function(err, items) {
-        console.log(items);
-        res.jsonp(items);
-      });
-    });
-  });
-};
-exports.findProducts4UserByLname = function(req, res) {
-  console.log('in find /products/:name/:shops by name');
-  console.log(req.params);
-  var name = req.params.name;
-  var shops = req.params.shops;
-  var lid;
-  db.collection('users', function(err, collection) {
-    collection.find({name:name},{lists:{$elemMatch:{shops:shops}}}).toArray(function(err,listInfo){
-      console.log(listInfo[0]);
-      if(listInfo[0]==undefined){
-        res.jsonp('that list or user doesn\'t exist')
-      }else{
-        lid = listInfo[0].lists[0].lid;
-        db.collection('products', function(err, collection) {
-          collection.find({lid:lid}).toArray(function(err,theList){
-            //console.log(theList)
-            res.jsonp(theList)
-          })
-        })
-      }
-    })    
-  })
-}
-exports.addProduct4Lid=function(req, res){
-  console.log('in addProduct4Lid + upd lid timestamp');
-  console.log(req.params);
-  var lid = req.params.lid;
-  var body= req.body; 
-  console.log(body);
-  db.collection('products', function(err, collection) {
-      collection.insert(body, function(err, saved) {
-          if(err){res.jsonp(err)}else{res.jsonp(saved)};
-          updListTimestamp(db,lid);
-      });
-  });  
-}  
-exports.deleteProduct=function(req,res){
-  console.log('in deleteProduct by _id + getLidUpdTimestamp');
-  console.log(req.params);
-  var pid = ObjectId(req.params.pid);
-  getLidUpdTimestamp(db,pid,function(){
-    db.collection('products', function(err, collection) {
-      collection.remove({_id:pid}, function(err, saved) {
-        if(err){res.jsonp(err)}else{res.jsonp(saved)};
-      });
-    });    
-  });      
-}
 
 /*--------------------------------LIST functions----------------------------------------*/
 
@@ -265,7 +168,7 @@ exports.createList=function(req,res){
   console.log('in createList w shops');
   console.log(req.params.shops);
   var shops = req.params.shops;
-  var body= {lid:util.ity.createRandomWord(8), shops:shops, timestamp:Date.now()} 
+  var body= {lid:util.ity.createRandomWord(6), shops:shops, timestamp:Date.now()} 
   console.log(body);
   db.collection('lists', function(err, collection) {
       collection.insert(body, function(err, saved) {
@@ -358,22 +261,24 @@ products.items = [
 var lists =[];
 lists.name = 'lists';
 lists.items = [
-{lid:'1', shops:'groceries', timestamp:1395763172175},
-{lid:'2', shops:'hardware', timestamp:1395763172175},
-{lid:'3', shops:'drugs', timestamp:1395763172175},
-{lid:'4', shops:'groceries', timestamp:1395763172175},
-{lid:'5', shops:'building', timestamp:1395763172175},
-{lid:'6', shops:'garden', timestamp:1395763172175},
-{lid:'7', shops:'groceries', timestamp:1395763172175},
-{lid:'0', shops:'testShop', timestamp:1395763172175},
-{lid:'00', shops:'testShop', timestamp:1395763172175}
+{lid:'Jutebi', shops:'groceries', timestamp:1395763172175, list:[
+    {product:'banana', done:false, tags:[], amt:{}},
+    {product:'coffee', done:false, tags:[], amt:{}},
+    {product:'apples', done:true, tags:['produce'], amt:{qty:3, unit:'3lb bag'}},
+    {product:'milk', done:false, tags:['orgainic', 'dairy'], amt:{qty:1,unit:'1/2 gal'}},
+    {product:'butter', done:false, tags:[], amt:{}},
+    {product:'teff flour', done:true, tags:[], amt:{}}], 
+      stores:[{id:'s_Bereti', name: 'Stop&Shop'}]},
+{lid:'Guvupa', shops:'groceries', timestamp:1395763172175},
+{lid:'Kidoju', shops:'hardware', timestamp:1395763172175},
+{lid:'Woduvu', shops:'drugs', timestamp:1395763172175},
 ];
 
 var users = [];
 users.name = 'users';
 users.items= [
-{name: 'tim', email: 'mckenna.tim@gmail.com', lists:[]},
-{name: 'tim7', email: 'mckenna.tim@gmail.com', lists:[]},
-{name: 'peri', email: 'perimckenna@gmail.com', lists:[]},
-{name: 'tim2', email: 'mckt_jp@yahoo.com', lists:[]}
+{name: 'tim', email: 'mckenna.tim@gmail.com', lists:[], role:'admin', timestamp:1399208688, apikey:'Natacitipavuwunexelisaci'},
+{name: 'tim7', email: 'mckenna.tim@gmail.com', lists:[], role:'user', timestamp:1399208688, apikey:'Qemavohegoburuxosuqujoga' },
+{name: 'peri', email: 'perimckenna@gmail.com', lists:[], role:'user', timestamp:1399208688, apikey: 'Piyopagibatinohovixekadi'},
+{name: 'tim2', email: 'mckt_jp@yahoo.com', lists:[], role:'user', timestamp:1399208688, apikiey: 'Sobeqosevewacokejufozeki'}
 ];

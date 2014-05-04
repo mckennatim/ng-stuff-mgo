@@ -1,5 +1,6 @@
 var superagent = require('superagent')
 var expect = require('expect.js')
+var should = require('should')
 var _ = require('underscore')
 var util = require('../util/myutil.js');
 
@@ -8,9 +9,9 @@ var httpLoc = 'http://localhost:3000/api/'
 describe('superagent:', function(){
   var name = 'tim7';
   var ucnt = 0;
-  var listId = '0';
-  var otherListId = '00';
-  var listShops = 'testShop';
+  var listId = 'Jutebi';
+  var otherListId = 'Vegada';
+  var listShops = 'groceries';
   it('GET / should be running and return: please select...', function(done){
     superagent.get(httpLoc)
       .end(function(e, res){
@@ -58,7 +59,7 @@ describe('superagent:', function(){
 
     it('POSTs a new /user/:tim7 -> full array of objects ', function(done){
       superagent.post(httpLoc+'users')
-        .send({name:name, email:"tim@sitebuilt.net", lists:[]})
+        .send({name:name, email:"tim@sitebuilt.net", lists:[],role:'user', timestamp:1399208688, apikey:'Qemavohegoburuxosuqujoga' })
         .end(function(e,res){
           console.log(res.body)
           expect(e).to.eql(null)
@@ -103,11 +104,11 @@ describe('superagent:', function(){
         })    
     })
 
-    it('PUTs a new :list on /users/:name/:listId->list', function(done){
+    it('PUTs an existing :list on /users/:name/:listId->list', function(done){
       superagent.put(httpLoc+'users/'+name+'/'+listId)
         .send()
         .end(function(e, res){
-          //console.log(res.body)
+          console.log(res.body)
           expect(e).to.eql(null)
           expect(typeof res.body).to.eql('object')
           expect(res.body.lid).to.eql(listId) 
@@ -125,161 +126,18 @@ describe('superagent:', function(){
           done()
         })
     })    
-    it('reject a PUT of new :list for user -> name taken, choose another', function(done){
+    it('reject a PUT of :list for user -> null list with that id', function(done){
       superagent.put(httpLoc+'users/'+name+'/'+otherListId)
         .send()
         .end(function(e, res){
           //console.log(res.body)
           expect(e).to.eql(null)
-          expect(res.body).to.be('name taken, choose another')       
+          expect(res.body).to.be('null list with that lid')       
           done()
         })
     })         
   })
-/*----------------------------------------------------------------------------------*/
-  describe('products', function(){
-    var productCnt = 4;
-    var pid;
-    var product = 'hot dog with craut';
-    var wasDonePid;
-    var wasDoneProduct;
 
-    it('GETs all /products', function(done){
-      superagent.get(httpLoc+'products/')
-        .end(function(e,res){
-          expect(e).to.eql(null)
-          done()          
-        })
-    })
-    it('GETs all /products for /:listId 0', function(done){
-      superagent.get(httpLoc+'products/'+listId)
-        .end(function(e,res){
-          //console.log(res.body)          
-          expect(res.body.length).to.eql(productCnt)          
-          done()          
-        })
-        
-    })
-    it('GETs /products/:name/:shops', function(done){
-      superagent.get(httpLoc+'products/'+name+'/'+listShops)
-        .end(function(e,res){      
-          //console.log(res.body)          
-          expect(e).to.eql(null)
-          expect(res.body).to.be.an('array')          
-          done()
-        })          
-    })  
-    it('fails to GETs /products/:name Or/:shopNoExists', function(done){
-      superagent.get(httpLoc+'products/z'+name+'/z'+listShops)
-        .end(function(e,res){      
-          //console.log(res.body)          
-          expect(e).to.eql(null)
-          expect(res.body).to.eql('that list or user doesn\'t exist')          
-          done()
-        })          
-    })
-    it('POSTs new /product/:lid +timestamp', function(done){
-      superagent.post(httpLoc+'products/'+listId)
-        .send({lid:listId, product:product, done:false, tags:[]})
-        .end(function(e,res){
-          //console.log(res.body)
-          pid = res.body[0]._id;
-          //console.log(pid)         
-          expect(e).to.eql(null)
-          expect(res.body.length).to.eql(1)
-          expect(res.body[0]._id.length).to.eql(24)
-          expect(res.body[0].product).to.be(product)
-          done()
-        })       
-    })
-    it('checks that product count ^ and new product is there', function(done){
-      superagent.get(httpLoc+'products/'+listId)
-        .end(function(e,res){
-          //console.log(res.body) 
-          var theRec= _.where(res.body,{_id:pid})
-          //console.log(theRec)
-          expect(theRec[0].product).to.eql(product)
-          expect(res.body.length).to.eql(productCnt+1)          
-          done()          
-        })
-    })
-    it('DELs products/:_id->success=1 +timestamp', function(done){
-      superagent.del(httpLoc+'products/'+pid)
-        .end(function(e, res){
-          //console.log(res.body)
-          expect(e).to.eql(null)
-          expect(res.body).to.eql(1)
-          done()
-        })
-    })
-    it('GETs /products/done/:lid for list' ,function(done){
-      superagent.get(httpLoc+'products/done/'+listId)
-        .end(function(e, res){
-          //console.log(res.body)
-          wasDonePid=res.body[0]._id
-          wasDoneProduct=res.body[0].product
-          //console.log(wasDonePid)
-          expect(e).to.eql(null)
-          expect(res.body).to.be.an('array')
-          expect(res.body.length).to.eql(productCnt)
-          done()
-        })
-    })
-    it('GETs no /products/needed/:lid for list' ,function(done){
-      superagent.get(httpLoc+'products/needed/'+listId)
-        .end(function(e, res){
-          //console.log(res.body)
-          //wasNeededPid=res.body[0]._id
-          //console.log(wasDonePid)
-          expect(e).to.eql(null)
-          expect(res.body).to.be.an('array')
-          expect(res.body.length).to.eql(0)
-          done()
-        })
-    })
-    it('PUTs update /product/:pid to needed +timestamp', function(done){
-      superagent.put(httpLoc+'products/'+wasDonePid)
-        .send({done:false})
-        .end(function(e, res){
-          console.log(res.body)
-          expect(e).to.eql(null)
-          expect(res.body).to.eql(1)
-          done()
-        })
-    })
-    it('GETs 1 /products/needed/:lid for list' ,function(done){
-      superagent.get(httpLoc+'products/needed/'+listId)
-        .end(function(e, res){
-          //console.log(res.body)
-          expect(e).to.eql(null)
-          expect(res.body).to.be.an('array')
-          expect(res.body[0]._id).to.eql(wasDonePid)
-          done()
-        })
-    })
-    it('PUTs update /product/:pid to done +timestamp', function(done){
-      superagent.put(httpLoc+'products/'+wasDonePid)
-        .send({done:true})
-        .end(function(e, res){
-          //console.log(res.body)
-          expect(e).to.eql(null)
-          expect(res.body).to.eql(1)
-          done()
-        })
-    })            
-    it('PUTs update /product/:pid product(name) +timestamp', function(done){
-      var productMod =wasDoneProduct+'Z';
-      //console.log({product:productMod})
-      superagent.put(httpLoc+'products/'+wasDonePid)
-        .send({product:productMod})
-        .end(function(e, res){
-          //console.log(res.body)
-          expect(e).to.eql(null)
-          expect(res.body).to.eql(1)
-          done()
-        })
-    })              
-  })
 /*----------------------------------------------------------------------------------*/
   describe('lists', function(){
     var newListId;
@@ -324,5 +182,40 @@ describe('superagent:', function(){
           done()
         })
     })
-  })    
+  })
+/*----------------------------------------------------------------------------------*/
+  describe('authentication', function(){
+    var agent = superagent.agent();
+
+    before(loginUser(agent));    
+    it('POSTs authenticate for fake user',function(done){
+      expect(1).to.eql(1);
+      done();
+    })
+    it('GETs userinfo from api/account', function(done){
+      agent
+        .get('http://localhost:3000/api/account/')
+        .end(function(e,res){
+          res.should.have.status(200)
+          done()
+        })
+    })
+  })  
+
 })
+
+function loginUser(agent) {
+  return function(done) {
+    agent
+      .post('http://localhost:3000/api/authenticate')
+      .send({apikey:'1234567'})
+      .end(onResponse);
+
+    function onResponse(err, res) {
+      console.log(res.body)
+      res.should.have.status(200);
+      //res.text.should.include('Dashboard');
+      return done();
+    }
+  };
+}
