@@ -1,5 +1,6 @@
 'use strict';
 var httpLoc = 'http://10.0.1.24:3000/api/';
+
 /* Services */
 /*
 var underscore = angular.module('underscore', []);

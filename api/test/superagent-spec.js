@@ -2,7 +2,7 @@ var superagent = require('superagent')
 var expect = require('expect.js')
 var should = require('should')
 var _ = require('underscore')
-var util = require('../util/myutil.js');
+var myut = require('../util/myutil.js');
 
 var httpLoc = 'http://localhost:3000/api/'
 
@@ -186,36 +186,46 @@ describe('superagent:', function(){
 /*----------------------------------------------------------------------------------*/
   describe('authentication', function(){
     var agent = superagent.agent();
-
-    before(loginUser(agent));    
-    it('POSTs authenticate for fake user',function(done){
-      expect(1).to.eql(1);
-      done();
+    var apikey='1234567';
+    //before(loginUser(agent));    
+    it('POSTs succeeds for fake user for correct apikey',function(done){
+      agent
+        .post('http://localhost:3000/api/authenticate')
+        .send({apikey:apikey})
+        .end(function(e,res){
+          console.log(res.status)
+          expect(res.body.apikey).to.be(apikey);
+          expect(1).to.eql(1);
+          done();
+        })
     })
-    it('GETs userinfo from api/account', function(done){
+    it('GETs succeeds w userinfo from api/account when authenticated', function(done){
       agent
         .get('http://localhost:3000/api/account/')
         .end(function(e,res){
-          res.should.have.status(200)
+          console.log(res.body)
+          expect(res.body.apikey).to.be(apikey);
+          done()
+        })
+    })
+    it('POSTs fails with error for fake user with wrong apikey',function(done){
+      agent
+        .post('http://localhost:3000/api/authenticate')
+        .send({apikey:'123457'})
+        .end(function(e,res){
+          console.log(res.body);
+          expect(res.body.message).to.be('Authentication Error');
+          done();
+        })
+    })
+    it('GETs fails with error for api/account fails when not authenticated', function(done){
+      agent
+        .get('http://localhost:3000/api/account/')
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.message).to.be('Authentication Error');
           done()
         })
     })
   })  
-
 })
-
-function loginUser(agent) {
-  return function(done) {
-    agent
-      .post('http://localhost:3000/api/authenticate')
-      .send({apikey:'1234567'})
-      .end(onResponse);
-
-    function onResponse(err, res) {
-      console.log(res.body)
-      res.should.have.status(200);
-      //res.text.should.include('Dashboard');
-      return done();
-    }
-  };
-}

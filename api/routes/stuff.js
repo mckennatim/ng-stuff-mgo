@@ -5,6 +5,7 @@ var MongoClient = require('mongodb').MongoClient,
 //to translate mongo id string to mongo _id
 var ObjectId = require('mongoose').Types.ObjectId;
 var util = require('../util/myutil.js')
+
 /*---------------------------------------------------------------------------*/
 var mongoClient = new MongoClient(new Server('localhost', 27017));
 mongoClient.open(function(err, mongoClient) {
@@ -46,8 +47,9 @@ mongoClient.open(function(err, mongoClient) {
           });
         });
       }
-    });  
+    });     
 }); 
+
 
 var find =function(na, res){
     db.collection(na, function(err, collection) {
@@ -198,6 +200,7 @@ exports.updateList = function(req,res){
     });
   });
 };
+
 
 /*------------------------------support functions----------------------------------*/
 var updListTimestamp=function(db,lid){

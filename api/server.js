@@ -1,43 +1,13 @@
 var express = require('express')
 stuff = require('./routes/stuff')
+
 var passport = require('passport')
 var ppstuff = require('./util/ppstuff')
 var util = require('util')
 var LocalStrategy = require('passport-localapikey').Strategy;
-/*
-var users = [
-    {id:1, user: 'tim', apikey: '1234567', email: 'mckenna.tim@gmail.com', role:'admin'}
-  , {id:2, user: 'joe', apikey: 'birthday', email: 'joe@example.com', role:'user'}
-];  
-console.log(users[0].user);
 
-function findById(id, fn) {
-  var idx = id - 1;
-  if (users[idx]) {
-    fn(null, users[idx]);
-  } else {
-    fn(new Error('User ' + id + ' does not exist'));
-  }
-}
-function findByUsername(user, fn) {
-  for (var i = 0, len = users.length; i < len; i++) {
-    var user = users[i];
-    if (user.user === user) {
-      return fn(null, user);
-    }
-  }
-  return fn(null, null);
-}
-function findByApiKey(apikey, fn) {
-  for (var i = 0, len = users.length; i < len; i++) {
-    var user = users[i];
-    if (user.apikey === apikey) {
-      return fn(null, user);
-    }
-  }
-  return fn(null, null);
-}
-*/
+var dog = 'butler';
+
 
 passport.serializeUser(function(user, done) {
   done(null, user.id);
@@ -110,31 +80,21 @@ app.get('/api/account', ppstuff.ensureAuthenticated, function(req, res){
 });
 
 app.get('/api/unauthorized', function(req, res){
+  req.logout();
   res.jsonp({ message: "Authentication Error" })
 });
 
 //curl -v -d "apikey=1234567" http://127.0.0.1:3000/api/authenticate -c cookies.txt
 //curl -c cookies.txt -b cookies.txt -G http://127.0.0.1:3000/api/account
 //node_modules/vows/bin/vows  test/strategy-spec.js  --spec
+
 app.post('/api/authenticate', 
   passport.authenticate('localapikey', { failureRedirect: '/api/unauthorized'}),
   function(req, res) {
      res.jsonp(req.user)
   });
 
+
 app.listen(3000);
 console.log('listening on port 3000');
 
-/*
-// Simple route middleware to ensure user is authenticated.
-//   Use this route middleware on any resource that needs to be protected.  If
-//   the request is authenticated (typically via a persistent login session),
-//   the request will proceed.  Otherwise, the user will be redirected to the
-//   login page.
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { 
-    return next(); 
-  }
-  res.redirect('/api/unauthorized')
-}
-*/
