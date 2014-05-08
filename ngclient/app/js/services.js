@@ -26,17 +26,17 @@ stuffAppServices.factory('ItemsData', function($http) {
   ];
     return {
     get: function () {
-      //*
+      /*
       var url=httpLoc + 'products/4';
       var promise=$http.get(url).then(function(data) {
         console.log(data.data);
         return data;
       });
       return promise;
-      /*     
+      */   
       var ret = JSON.parse(localStorage.getItem(lsid)) || inidata;
       return ret;
-      */
+      
     },
     put: function(list){
       console.log('in put'+lsid);
@@ -60,6 +60,40 @@ stuffAppServices.factory('UsersData', function($http) {
       var ret = JSON.parse(localStorage.getItem(lsid)) || inidata;
       return ret;
       */
+    }
+  }
+});
+stuffAppServices.factory('UserLS', function() {
+  return {
+    users: {},
+    blankUsers: {lastlive:0, userlist:[]},
+    getAll: function (key) {    
+      var ret = {};
+      if(!localStorage.getItem(key)){
+        ret = this.blankUsers;
+        localStorage.setItem(key, JSON.stringify(ret));
+      } else {
+        ret=JSON.parse(localStorage.getItem(key));
+      }
+      return ret;
+    },
+    getUser: function (user,key) {   
+      var ret = this.getAll(key)
+      return ret[user];
+    },    
+    postUser: function(user,key) {
+      var al = this.getAll(key);
+      console.log(user.name)
+      al.userList.push(user)
+      al.userList = _.uniq(al.userList)
+      al[user.name]=user 
+      localStorage.setItem(key, JSON.stringify(al));
+      return al
+    },
+    numUsers: function(key){
+      var bl = this.getAll(key);
+      console.log(bl)
+      return bl.userList.length;
     }
   }
 });

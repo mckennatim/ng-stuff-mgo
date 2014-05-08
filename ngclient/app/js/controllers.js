@@ -1,5 +1,7 @@
 'use strict';
 
+var httpLoc = 'http://10.0.1.24:3000/api/';
+
 /* Controlrs */
 var stuffAppControllers = angular.module('stuffAppControllers', []);
 
@@ -47,14 +49,66 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
   };
 });
 
-stuffAppControllers.controller('RegisterCtrl', function ($scope) {
+stuffAppControllers.controller('RegisterCtrl', function ($scope, $http) {
   $scope.dog = 'butler';
+  $scope.nameValid =/^\s*\w*\s*$/
+  $scope.username=''
+  $scope.email=''
+  $scope.apikey=''
+  $scope.user={};
+  $scope.isuUser='';
+  $scope.state='Register';
+  var ret = JSON.parse(localStorage.getItem('s2g_user'));
+  if(ret){
+    console.log('ls exists')
+    if(ret.user){$scope.user=ret.user}
+    if(ret.email){$scope.user=ret.email}
+    $scope.doesNameExist()  
+  };
+  $scope.submit = function(){
+    $scope.user = {username: $scope.username, email: $scope.email, lists:[]}
+    console.log($scope.user)
+    if ($scope.state=='Register'){
+      console.log('registering new user and sending key')
+    }else if ($scope.state = 'Get your key'){
+      console.log('Send new key to user')
+    } else if($scope.state = 'Enter your apikey'){
+      console.log('entering key in user record')
+    }
+  } 
+  $scope.doesNameExist= function(){
+    console.log($scope.username+' changed')
+    $http.get(httpLoc+'isUser/'+ $scope.username).then(function(data) {
+        console.log($scope.username +' is ' + data.data.message);
+        $scope.isUser = data.data.message
+        if (data.data.message==' already registered'){$scope.state='Get your key'};
+        return data;
+      });
+  } 
 });
 
-stuffAppControllers.controller('IsregCtrl', function ($scope, $location) {
-  $scope.dog = 'rusty';
-  var ret = JSON.parse(localStorage.getItem('s2g_user'));
-  if(!ret){$location.path('/register')} ;
-  //$location.path('/items') ;
-  console.log(!ret);
+stuffAppControllers.controller('IsregCtrl', function ($scope, $location, UserLS) {
+  $scope.dog = UserLS.getAll('s2g_users');
+  $scope.numUsers = UserLS.numUsers();
+  //console.log('dog');
+});
+
+stuffAppControllers.controller('ListCtrl', function ($scope) {
+  $scope.dog = 'boots';
+});
+stuffAppControllers.controller('ListsCtrl', function ($scope) {
+  $scope.dog = 'dusty';
+
+});
+stuffAppControllers.controller('UserCtrl', function ($scope) {
+  $scope.dog = 'petey';
+
+});
+stuffAppControllers.controller('ShopsCtrl', function ($scope) {
+  $scope.dog = 'fritz';
+
+});
+stuffAppControllers.controller('ConfigCtrl', function ($scope) {
+  $scope.dog = 'kazzy';
+
 });

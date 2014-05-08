@@ -56,7 +56,14 @@ describe('superagent:', function(){
           done()
         })
     })
-
+    it('GETs isUser/:tim7 is available', function(done){
+      superagent.get(httpLoc+'isUser/'+name)
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.message).to.eql(' available')
+          done()
+        })
+    })
     it('POSTs a new /user/:tim7 -> full array of objects ', function(done){
       superagent.post(httpLoc+'users')
         .send({name:name, email:"tim@sitebuilt.net", lists:[],role:'user', timestamp:1399208688, apikey:'Qemavohegoburuxosuqujoga' })
@@ -84,7 +91,7 @@ describe('superagent:', function(){
           done()
         })
     })
-    +    
+       
     it('GETs a users/:tim7', function(done){
       superagent.get(httpLoc+'users/'+name)
         .end(function(e,res){
@@ -93,7 +100,15 @@ describe('superagent:', function(){
           done()
         })
     })
-
+       
+    it('GETs username is already registered for isUser/:tim7', function(done){
+      superagent.get(httpLoc+'isUser/'+name)
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.message).to.eql(' already registered')
+          done()
+        })
+    })
     it('rejects POST of duplicate user/:tim7 ->11000', function(done){
       superagent.post(httpLoc+'users')
         .send({name:name, email:"tim@sitebuilt.net", lists:[]})

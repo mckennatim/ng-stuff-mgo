@@ -1,5 +1,4 @@
 'use strict';
-
 /* jasmine specs for services go here */
 
 describe('service', function() {
@@ -12,3 +11,51 @@ describe('service', function() {
     }));
   });
 });
+describe('UserLS', function(){  
+  var store= {};
+  beforeEach(function() {
+    module('stuffAppServices');
+    // LocalStorage mock.
+    spyOn(localStorage, 'getItem').andCallFake(function(key) {
+        return store[key];
+    });
+    Object.defineProperty(sessionStorage, "setItem", { writable: true });
+    spyOn(localStorage, 'setItem').andCallFake(function(key, value) {
+        store[key] = value;
+    });
+  });
+  it('is {lastlive:0, userlist:[]} when LS is empty}', inject(function(UserLS){
+    var uli = UserLS.getAll('s2g_users');
+    //console.log(uli.userlist.length); 
+    expect(uli.userlist.length).toEqual(0);
+    expect(JSON.stringify(uli)).toBe(JSON.stringify({lastlive:0, userlist:[]})); 
+  }));
+  it('does not getUSER if not there', inject(function(UserLS){
+    var uli = UserLS.getUser('tim', 's2g_users');
+    //console.log(uli)
+    expect(uli).toBe(undefined)
+  }));
+  it('has a user named Tim if LS is full', inject(function(UserLS){ 
+    store = {storevars:['s2g_users','s2g_lists'], s2g_users: {lastLive:0, userList:['tim','tim2'],
+    tim: {name: 'tim', email: 'mckenna.tim@gmail.com', lists:[], role:'admin', timestamp:1399208688, apikey:'Natacitipavuwunexelisaci'}, 
+    tim2: {name: 'tim2', email: 'mckt_jp@yahoo.com', lists:[], role:'user', timestamp:1399208688, apikiey: 'Sobeqosevewacokejufozeki'}}};
+    var uli = UserLS.getAll('s2g_users');
+    expect(uli.tim.name).toBe('tim');
+  }));
+  it('get(s)User record for tim', inject(function(UserLS){
+    var uli = UserLS.getUser('tim', 's2g_users');
+    //console.log(uli)
+    expect(uli.email).toBe('mckenna.tim@gmail.com')
+  }));
+  it('post(s)User with apikey updated to donaldduck and updates userlist', inject(function(UserLS){
+    store.s2g_users.tim.apikey='donaldduck';
+    var uli = UserLS.postUser(store.s2g_users.tim, 's2g_users');
+    expect(uli.tim.apikey).toBe('donaldduck')
+  }));
+  it('counts the number of users to be 2', inject(function(UserLS){
+    var uli = UserLS.numUsers('s2g_users');
+    expect(uli).toBe(2)    
+  }));
+});
+
+

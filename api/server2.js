@@ -1,4 +1,5 @@
 var express = require('express')
+var nodemailer = require('nodemailer')
 var myut = require('./util/myutil')
 var passport = require('passport')
 var ppstuff = require('./util/ppstuff')
@@ -38,6 +39,15 @@ mongoClient.open(function(err, mongoClient) {
       }
     });   
 }); 
+/*-----------------------------setup mailer-----------------------------------*/
+var smtpTransport = nodemailer.createTransport("SMTP",{
+    service: "Gmail",
+    auth: {
+        user: "mckenna.tim@gmail.com",
+        pass: "gonji9ol"
+    }
+});  
+
 
 /*-----------------------------setup passport-----------------------------------*/
 passport.serializeUser(function(user, done) {
@@ -82,6 +92,7 @@ app.configure(function() {
 });
 
 app.all('*', function(req,res,next){
+  res.header("Access-Control-Allow-Origin", "*");
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-xsrf-token");
   next();
@@ -146,6 +157,50 @@ app.get('/api/users/:name', function(req, res) {
         collection.findOne({name:name},function(err, items) {
             console.log(items);
             res.jsonp(items);
+        });
+    });
+});
+app.get('/api/isUser/:name', function(req, res) {
+    console.log('in isUser by name');
+    var name = req.params.name;
+    db.collection('users', function(err, collection) {
+        collection.findOne({name:name},function(err, items) {
+          console.log(items)            
+            if(items != null && items.name==req.params.name){
+              console.log('is registered')
+              res.jsonp({message: ' already registered'})
+            } else {
+              res.jsonp({message: ' available'});
+            }           
+        });
+    });
+});
+app.get('/api/emailKey/:name', function(req, res) {
+    console.log('in emailKey by name');
+    var name = req.params.name;
+    db.collection('users', function(err, collection) {
+        collection.findOne({name:name},function(err, items) {
+          console.log(items);
+          var mailOptions = {
+            from: "Stuff2Get <mckenna.tim@gmail.com>", // sender address
+            to: items.email, // list of receivers
+            subject: "apikey", // Subject line
+            text: "Your apikey for stuff2get is: " +items.apikey + "Return to the web page and enter your apikey to complete registration for your device", // plaintext body
+            html: "<b>Your apikey for stuff2get is: " +items.apikey + "</b><p>Return to the web page and enter your apikey to complete registration for your device </b></p>" // html body
+        }
+
+        // send mail with defined transport object
+        smtpTransport.sendMail(mailOptions, function(error, response){
+            if(error){
+                console.log(error);
+            }else{
+                console.log("Message sent: " + response.message);
+            }
+        smtpTransport.close(); // shut down the connection pool, no more messages
+        });
+          if(err){res.jsonp(err)}else{
+            res.jsonp({message: 'check your email and come back'})                 
+          };
         });
     });
 });

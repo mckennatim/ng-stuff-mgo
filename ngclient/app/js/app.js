@@ -8,8 +8,11 @@ angular.module('stuffApp', [
   'stuffAppControllers'
 ]).
 config(['$routeProvider', function($routeProvider) {
-  $routeProvider.when('/items', {templateUrl: 'partials/items.html', controller: 'ItemsCtrl'});
-  $routeProvider.when('/view2', {templateUrl: 'partials/partial2.html', controller: 'MyCtrl2'});
+  $routeProvider.when('/list', {templateUrl: 'partials/list.html', controller: 'ListCtrl'});
+  $routeProvider.when('/lists', {templateUrl: 'partials/lists.html', controller: 'ListsCtrl'});
+  $routeProvider.when('/user', {templateUrl: 'partials/user.html', controller: 'UserCtrl'});
+  $routeProvider.when('/shops', {templateUrl: 'partials/shops.html', controller: 'ShopsCtrl'});
+  $routeProvider.when('/config', {templateUrl: 'partials/config.html', controller: 'ConfigCtrl'});
   $routeProvider.when('/', {templateUrl: 'partials/shownothing.html', controller: 'IsregCtrl'});
   $routeProvider.when('/register', {templateUrl: 'partials/register.html', controller: 'RegisterCtrl'});
   $routeProvider.otherwise({redirectTo: '/items'});
