@@ -66,13 +66,16 @@ stuffAppServices.factory('UsersData', function($http) {
 stuffAppServices.factory('UserLS', function() {
   return {
     users: {},
-    blankUsers: {lastlive:0, userlist:[]},
+    blankUsers: {lastLive:0, userList:[]},
     getAll: function (key) {    
       var ret = {};
       if(!localStorage.getItem(key)){
         ret = this.blankUsers;
+        //console.log(JSON.stringify(ret))
         localStorage.setItem(key, JSON.stringify(ret));
       } else {
+        //console.log(localStorage.getItem(key));
+        //console.log(JSON.parse(localStorage.getItem(key)).userList);
         ret=JSON.parse(localStorage.getItem(key));
       }
       return ret;
@@ -83,8 +86,8 @@ stuffAppServices.factory('UserLS', function() {
     },    
     postUser: function(user,key) {
       var al = this.getAll(key);
-      console.log(user.name)
-      al.userList.push(user)
+      //console.log(user.name)
+      al.userList.push(user.name)
       al.userList = _.uniq(al.userList)
       al[user.name]=user 
       localStorage.setItem(key, JSON.stringify(al));

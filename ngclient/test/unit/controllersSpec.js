@@ -26,27 +26,19 @@ describe('controllers', function(){
     });
 //In other words, you don’t test the controller; you test the scope that the controller has created.    
   });
-  describe('IsregCtrl', function(){
-    var $scope, ctrl, $rootScope, $location, UserLS, createController;
-    beforeEach(inject(function($injector) {
-      $rootScope = $injector.get('$rootScope');
-      $scope = $rootScope.$new();
-      $location = $injector.get('$location');
-      UserLS = $injector.get('UserLS')
-      var $controller = $injector.get('$controller');
-      createController = function() {
-        return $controller('IsregCtrl', {
-          '$scope': $scope
-        });
-      };
-    })); 
-    it('obtains the number of users', function(){
-      var controller = createController();
-      //console.log($scope.dog)
-      $location.path('/items');
-      expect($location.path()).toEqual('/items')
-      //console.log(UserLS.numUsers())
-      //console.log(UserLS.getAll())
+    describe('controller: IsregCtrl', function() {
+    var ctrl, UserLS, $scope;
+    beforeEach(module('stuffApp'));    
+    beforeEach(inject(function($rootScope, $controller) {
+      UserLS = {
+        numUsers: function(key) {}
+      };      
+      spyOn(UserLS, 'numUsers').andReturn("2");      
+      $scope = $rootScope.$new();      
+      ctrl = $controller('IsregCtrl', {$scope: $scope , UserLS: UserLS });
+    }));    
+    it('Should call UserLS numUsers and get 2', function() {
+      expect($scope.numUsers).toBe('2');
     });
   });
 });

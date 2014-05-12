@@ -88,9 +88,8 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http) {
 });
 
 stuffAppControllers.controller('IsregCtrl', function ($scope, $location, UserLS) {
-  $scope.dog = UserLS.getAll('s2g_users');
-  $scope.numUsers = UserLS.numUsers();
-  //console.log('dog');
+  $scope.numUsers = UserLS.numUsers('s2g_users');
+  console.log($scope.numUsers);
 });
 
 stuffAppControllers.controller('ListCtrl', function ($scope) {
