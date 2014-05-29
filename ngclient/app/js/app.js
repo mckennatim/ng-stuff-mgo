@@ -3,19 +3,19 @@
 
 // Declare app level module which depends on filters, and services
 angular.module('stuffApp', [
-  'ngRoute',
+  'ui.router',
   'stuffAppServices',
   'stuffAppControllers'
 ]).
-config(['$routeProvider', function($routeProvider) {
-  $routeProvider.when('/list', {templateUrl: 'partials/list.html', controller: 'ListCtrl'});
-  $routeProvider.when('/lists', {templateUrl: 'partials/lists.html', controller: 'ListsCtrl'});
-  $routeProvider.when('/user', {templateUrl: 'partials/user.html', controller: 'UserCtrl'});
-  $routeProvider.when('/shops', {templateUrl: 'partials/shops.html', controller: 'ShopsCtrl'});
-  $routeProvider.when('/config', {templateUrl: 'partials/config.html', controller: 'ConfigCtrl'});
-  $routeProvider.when('/', {templateUrl: 'partials/shownothing.html', controller: 'IsregCtrl'});
-  $routeProvider.when('/register', {templateUrl: 'partials/register.html', controller: 'RegisterCtrl'});
-  $routeProvider.otherwise({redirectTo: '/items'});
+config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $stateProvider) {
+  $stateProvider.state('list', {url: '/list', templateUrl: 'partials/list.html', controller: 'ListCtrl'});
+  $stateProvider.state('lists', {url: '/lists', templateUrl: 'partials/lists.html', controller: 'ListsCtrl'});
+  $stateProvider.state('user', {url: '/user', templateUrl: 'partials/user.html', controller: 'UserCtrl'});
+  $stateProvider.state('shops', {url: '/shops', templateUrl: 'partials/shops.html', controller: 'ShopsCtrl'});
+  $stateProvider.state('config', {url: '/config', templateUrl: 'partials/config.html', controller: 'ConfigCtrl'});
+  $stateProvider.state('x', {url: '/', templateUrl: 'partials/shownothing.html', controller: 'IsregCtrl'});
+  $stateProvider.state('register', {url: '/register', templateUrl: 'partials/register.html', controller: 'RegisterCtrl'});
+  $urlRouterProvider.otherwise('/items');
 }],
   ['$httpProvider', function($httpProvider) {
     $httpProvider.defaults.useXDomain = true;

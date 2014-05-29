@@ -5,6 +5,10 @@ var httpLoc = 'http://10.0.1.24:3000/api/';
 /* Controlrs */
 var stuffAppControllers = angular.module('stuffAppControllers', []);
 
+stuffAppControllers.controller('RootController', function($scope, $state) {
+  $scope.$state = $state;
+});
+
 stuffAppControllers.controller('ItemsCtrl', function ($scope) {
   $scope.dog = 'mutt';
 });
