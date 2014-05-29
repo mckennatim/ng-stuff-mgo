@@ -69,9 +69,9 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http) {
     $scope.user = {username: $scope.username, email: $scope.email, lists:[]}
     console.log($scope.user)
     if ($scope.state=='Register'){
-      console.log('registering new user and sending key')
+      console.log('new user to LS & db & get apikey sent')
     }else if ($scope.state = 'Get your key'){
-      console.log('Send new key to user')
+      console.log('new user to LS and get apikey sent')
     } else if($scope.state = 'Enter your apikey'){
       console.log('entering key in user record')
     }
@@ -89,6 +89,11 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http) {
 
 stuffAppControllers.controller('IsregCtrl', function ($scope, $location, UserLS) {
   $scope.numUsers = UserLS.numUsers('s2g_users');
+  if ($scope.numUsers==0){
+    $location.path('/register');
+  } else if($scope.numUsers==1){
+
+  }
   console.log($scope.numUsers);
 });
 

@@ -12,6 +12,7 @@ describe('directives', function() {
       });
       inject(function($compile, $rootScope) {
         var element = $compile('<span app-version></span>')($rootScope);
+        console.log(element);
         expect(element.text()).toEqual('TEST_VER');
       });
     });

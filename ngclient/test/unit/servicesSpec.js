@@ -6,6 +6,7 @@ describe('service', function() {
   describe('ItemsData', function() {
     it('should get first product on list', inject(function(ItemsData) {
       var tlist = ItemsData.get();
+      console.log(tlist);
       var item1= tlist[0].product;
       expect(item1).toEqual('banana');
     }));
