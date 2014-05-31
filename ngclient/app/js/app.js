@@ -15,7 +15,7 @@ config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $st
   $stateProvider.state('config', {url: '/config', templateUrl: 'partials/config.html', controller: 'ConfigCtrl'});
   $stateProvider.state('x', {url: '/', templateUrl: 'partials/shownothing.html', controller: 'IsregCtrl'});
   $stateProvider.state('register', {url: '/register', templateUrl: 'partials/register.html', controller: 'RegisterCtrl'});
-  $urlRouterProvider.otherwise('/items');
+  $urlRouterProvider.otherwise('/');
 }],
   ['$httpProvider', function($httpProvider) {
     $httpProvider.defaults.useXDomain = true;

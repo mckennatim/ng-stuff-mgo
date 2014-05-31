@@ -175,6 +175,35 @@ app.get('/api/isUser/:name', function(req, res) {
         });
     });
 });
+app.get('/api/isMatch/', function(req, res) {
+  console.log('in isMatch');
+  var user= req.query.user;
+  var email= req.query.email;
+  db.collection('users', function(err, collection) {
+    var andLen =0;
+    var orLen=0;
+    collection.find({name:user, email:email}).toArray(function(err, items) {
+      console.log(items)  
+      console.log(items.length)
+      andLen = items.length
+      collection.find({$or: [{name:user}, {email:email}]}).toArray(function(err, items) {
+        console.log(items)  
+        console.log(items.length)
+        orLen = items.length
+        if (andLen+orLen==0){
+          res.jsonp({message: 'available'});
+          console.log('available')                   
+        } else if(andLen==1 & orLen==1){
+          res.jsonp({message: 'match'});                   
+          console.log('match')                   
+        } else {
+          res.jsonp({message: 'conflict'});                   
+          console.log('conflict')                   
+        }             
+      });        
+    }); 
+  });    
+});
 app.get('/api/emailKey/:name', function(req, res) {
     console.log('in emailKey by name');
     var name = req.params.name;

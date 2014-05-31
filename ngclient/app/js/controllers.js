@@ -53,7 +53,7 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
   };
 });
 
-stuffAppControllers.controller('RegisterCtrl', function ($scope, $http) {
+stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthService) {
   $scope.dog = 'butler';
   $scope.nameValid =/^\s*\w*\s*$/
   $scope.username=''
@@ -61,6 +61,8 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http) {
   $scope.apikey=''
   $scope.user={};
   $scope.isuUser='';
+  $scope.isMatch='';
+  $scope.userNameIs=''
   $scope.state='Register';
   var ret = JSON.parse(localStorage.getItem('s2g_user'));
   if(ret){
@@ -74,6 +76,11 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http) {
     console.log($scope.user)
     if ($scope.state=='Register'){
       console.log('new user to LS & db & get apikey sent')
+      AuthService.isMatch($scope.username, $scope.email).then(function(data){
+        console.log(data);
+      },function(data){
+        console.log(data)
+      })
     }else if ($scope.state = 'Get your key'){
       console.log('new user to LS and get apikey sent')
     } else if($scope.state = 'Enter your apikey'){
@@ -82,19 +89,22 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http) {
   } 
   $scope.doesNameExist= function(){
     console.log($scope.username+' changed')
-    $http.get(httpLoc+'isUser/'+ $scope.username).then(function(data) {
-        console.log($scope.username +' is ' + data.data.message);
-        $scope.isUser = data.data.message
-        if (data.data.message==' already registered'){$scope.state='Get your key'};
-        return data;
-      });
+    AuthService.isUser($scope.username).then(function(data){
+      console.log(data)
+      $scope.userNameIs=data.message;
+    },function(data){
+      console.log(data)
+      $scope.userNameIs=data.message;
+    });
+    console.log('still alive')
   } 
 });
 
-stuffAppControllers.controller('IsregCtrl', function ($scope, $location, UserLS) {
+stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS) {
   $scope.numUsers = UserLS.numUsers('s2g_users');
+  console.log('in isRegCtrl # of users = ' + $scope.numUsers);
   if ($scope.numUsers==0){
-    $location.path('/register');
+    $state.go('register');
   } else if($scope.numUsers==1){
 
   }

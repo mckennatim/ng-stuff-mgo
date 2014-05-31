@@ -100,3 +100,39 @@ stuffAppServices.factory('UserLS', function() {
     }
   }
 });
+stuffAppServices.factory('AuthService', function($http, $q) {
+  return {
+    isUser: function(name) {
+      var url=httpLoc + 'isUser/'+name;
+      var deferred = $q.defer();
+      $http.get(url).   
+        success(function(data, status) {
+          console.log(data);
+          console.log(status);
+          deferred.resolve(data);
+        }).
+        error(function(data, status){
+          console.log(data || "Request failed");
+          console.log(status);
+          deferred.reject({message: 'server is down'})
+        });
+      return deferred.promise;
+    },
+    isMatch: function(name, email) {
+      var url=httpLoc + 'isMatch/?user='+name+'&email='+email;      
+      var deferred = $q.defer();
+      $http.get(url).   
+        success(function(data, status) {
+          console.log(data);
+          console.log(status);
+          deferred.resolve(data);
+        }).
+        error(function(data, status){
+          console.log(data || "Request failed");
+          console.log(status);
+          deferred.reject({message: 'server is down'})
+        });
+      return deferred.promise;
+    }    
+  }
+});

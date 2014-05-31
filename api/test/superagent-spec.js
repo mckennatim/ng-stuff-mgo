@@ -202,6 +202,10 @@ describe('superagent:', function(){
   describe('authentication', function(){
     var agent = superagent.agent();
     var apikey='1234567';
+    var ureg='tim';
+    var uav='fred';
+    var eregtim = 'mckenna.tim@gmail.com';
+    var enottim = 'mckenna.nottim@gmail.com';
     //before(loginUser(agent));    
     it('POSTs succeeds for fake user for correct apikey',function(done){
       agent
@@ -239,6 +243,33 @@ describe('superagent:', function(){
         .end(function(e,res){
           console.log(res.body)
           expect(res.body.message).to.be('Authentication Error');
+          done()
+        })
+    })
+    it('gets a [conflict] to existing user and email', function(done){
+      agent
+        .get(httpLoc+'isMatch/?user='+ureg+'&email=f'+eregtim)
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.message).to.be('conflict')
+          done()
+        })
+    })
+    it('gets a [match] to existing user and email', function(done){
+      agent
+        .get(httpLoc+'isMatch/?user='+ureg+'&email='+eregtim)
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.message).to.be('match')
+          done()
+        })
+    })
+    it('gets an [available] to existing user and email', function(done){
+      agent
+        .get(httpLoc+'isMatch/?user='+ureg+'z&email=z'+eregtim)
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.message).to.be('available')
           done()
         })
     })
