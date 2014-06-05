@@ -280,7 +280,7 @@ describe('superagent:', function(){
         .get(httpLoc+'isMatch/?user='+ureg+'z&email=z'+eregtim)
         .end(function(e,res){
           console.log(res.body)
-          expect(res.body.combIs).to.be('available')
+          expect(res.body.message).to.be('available')
           done()
         })
     })

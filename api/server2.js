@@ -135,7 +135,7 @@ createUser=function(usr, res, callback){
   console.log(usr)
   usr.timestamp=Date.now();
   if (usr.apikey.length < 10){
-    usr.apikey=myut.createRandomWord(24);
+    usr.apikey=makeKey();
     console.log('creating new user with apikiey')
   } 
   res.header("Access-Control-Allow-Origin", "*");
@@ -162,21 +162,26 @@ createUser=function(usr, res, callback){
     });
   });     
 }
-updateUser=function(usr, res){
+updateUser=function(usr, res, callback){
+  console.log('in updateUser');
   usr.timestamp=Date.now();
   if (usr.apikey.length < 10){
-    usr.apikey=myut.createRandomWord(24);
-    console.log('updating user, creating new key if needed')
+    usr.apikey=makeKey();
+    console.log('creating new key and emailing it')
   } 
   res.header("Access-Control-Allow-Origin", "*");
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
   db.collection('users', function(err, collection) {
-    collection.insert(usr, function(err, saved) {
-      if(err){
-        return err;
-      }else{
-        return saved;
-      };
+    collection.update({name: usr.name}, {$set:{email:usr.email, apikey: usr.apikey, timestamp:usr.timestamp}}, function(err, saved) {
+    if(err){
+      console.log(err)
+      ret = err;
+    }else{
+      console.log(saved)
+      console.log('right after update')
+      ret = saved;
+    };
+    callback(ret);
     });
   });     
 }
@@ -337,11 +342,14 @@ app.get('/api/isMatch/', function(req, res) {
   var email= req.query.email.toLowerCase();
   var apikey ="";
   console.log(name +' ' +email)
+  var usr ={}
   db.collection('users', function(err, collection) {
     var andLen =0;
     var orLen=0;
-    var user ={}
     collection.find({name:name, email:email}).toArray(function(err, user) {
+      if (user.length>0){
+        usr=user[0];
+      }      
       console.log(user)  
       console.log(user.length)
       andLen = user.length
@@ -352,7 +360,6 @@ app.get('/api/isMatch/', function(req, res) {
         if (andLen+orLen==0){
           //res.jsonp({message: 'available'});
           console.log('available') 
-          apikey= makeKey();
           var user = blankUser;
           user.name = name;
           user.email=email;
@@ -362,15 +369,17 @@ app.get('/api/isMatch/', function(req, res) {
             emailKey(retv[0], function(ret){
               console.log(ret);
             });
-            res.jsonp({combIs:'available', userRec:'created', email:'sent'});
+            res.jsonp({message:'available', userRec:'created', email:'sent'});
           });                 
-        } else if(andLen==1 & orLen==1){
-          res.jsonp({message: 'match'});                   
+        } else if(andLen==1 & orLen==1){                
           console.log('match') 
-          console.log(user)
-          //getKey or makeKey
-          //updateUser
-          //emailKey                  
+          console.log(usr)
+          updateUser(usr, res, function(retv){
+            emailKey(usr, function(ret){
+              console.log(ret);
+            });
+            res.jsonp({message: 'match'});   
+          });                 
         } else {
           res.jsonp({message: 'conflict'});                   
           console.log('conflict')                   
