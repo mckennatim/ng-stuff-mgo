@@ -50,6 +50,7 @@ var smtpTransport = nodemailer.createTransport("SMTP",{
         pass: "gonji9ol"
     }
 });  
+console.log(smtpTransport.options.service)
 
 /*--------------------------------PASSPORT stuff ------------------------------------*/
 
@@ -100,7 +101,9 @@ ensureAuthenticated = function(req, res, next) {
 /*--------------------------------UTILITY stuff ------------------------------------*/
 var blankUser= {name: '', email: '', lists:[], role:'', timestamp: 1, apikey: ''};
 
-emailKey =function(items){
+emailKey =function(items, callback){
+  console.log('in emailKey')
+  console.log(smtpTransport.options.service)
   var mailOptions = {
     from: "Stuff2Get <mckenna.tim@gmail.com>", // sender address
     to: items.email, // list of receivers
@@ -117,9 +120,11 @@ emailKey =function(items){
         console.log("Message sent: " + response.message);
         ret = {message: 'check your email and come back'} 
     }
+    smtpTransport.close(); // shut down the connection pool, no more messages
+    console.log(ret)
+    callback(ret);
   });
-  smtpTransport.close(); // shut down the connection pool, no more messages
-  return ret;
+
 }
 makeKey= function(){
   return myut.createRandomWord(24);
@@ -354,7 +359,9 @@ app.get('/api/isMatch/', function(req, res) {
           createUser(user, res, function(retv){
             console.log('in callback')
             console.log(retv)
-            emailKey(retv[0])
+            emailKey(retv[0], function(ret){
+              console.log(ret);
+            });
             res.jsonp({combIs:'available', userRec:'created', email:'sent'});
           });                 
         } else if(andLen==1 & orLen==1){
@@ -374,11 +381,15 @@ app.get('/api/isMatch/', function(req, res) {
 });
 app.get('/api/emailKey/:name', function(req, res) {
   console.log('in emailKey by name');
+  //console.log(smtpTransport.options.service)
   var name = req.params.name;
   db.collection('users', function(err, collection) {
     collection.findOne({name:name},function(err, items) {
-      console.log(items);
-      res.jsonp(emailKey(items));
+      //console.log(items);
+      //console.log(smtpTransport.options.service)
+      emailKey(items, function(ret){
+        res.jsonp(ret);
+      });
     });
   });
 });
