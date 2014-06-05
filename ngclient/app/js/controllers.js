@@ -9,9 +9,9 @@ stuffAppControllers.controller('RootController', function($scope, $state) {
   $scope.$state = $state;
 });
 
-stuffAppControllers.controller('ItemsCtrl', function ($scope) {
+stuffAppControllers.controller('ItemsCtrl', ['$scope', function ($scope) {
   $scope.dog = 'mutt';
-});
+}]);
 
 stuffAppControllers.controller('TimeCtrl', function ($scope, UsersData) {
   $scope.timestamp=Date.now();
@@ -53,7 +53,7 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
   };
 });
 
-stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthService) {
+stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthService, UserLS) {
   $scope.dog = 'butler';
   $scope.nameValid =/^\s*\w*\s*$/
   $scope.username=''
@@ -64,31 +64,41 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
   $scope.isMatch='';
   $scope.userNameIs=''
   $scope.state='Register';
-  var ret = JSON.parse(localStorage.getItem('s2g_user'));
-  if(ret){
-    console.log('ls exists')
-    if(ret.user){$scope.user=ret.user}
-    if(ret.email){$scope.user=ret.email}
-    $scope.doesNameExist()  
-  };
+  console.log('in register control')
   $scope.submit = function(){
     $scope.user = {username: $scope.username, email: $scope.email, lists:[]}
     console.log($scope.user)
     if ($scope.state=='Register'){
       console.log('new user to LS & db & get apikey sent')
+      var response='';
       AuthService.isMatch($scope.username, $scope.email).then(function(data){
         console.log(data);
+        response = data.message;
+        if (['available', 'match'].indexOf(response)>-1){
+          console.log('resonse is either available or match')
+          $scope.updateLS();
+          $scope.userNameIs = response;
+        } else if(response=='conflict'){
+          console.log('response is conflict')
+          $scope.userNameIs = ' Either the user is registered with a different email or email is in use by another user. Try something else.';
+        }
       },function(data){
         console.log(data)
+        response = data;
       })
+
     }else if ($scope.state = 'Get your key'){
       console.log('new user to LS and get apikey sent')
     } else if($scope.state = 'Enter your apikey'){
       console.log('entering key in user record')
     }
   } 
+  $scope.updateLS= function(){
+    $scope.user=UserLS.update($scope.username, $scope.email, $scope.apikey);
+  }
   $scope.doesNameExist= function(){
     console.log($scope.username+' changed')
+    $scope.userNameIs = ' will check status...'
     AuthService.isUser($scope.username).then(function(data){
       console.log(data)
       $scope.userNameIs=data.message;
@@ -101,11 +111,13 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
 });
 
 stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS) {
-  $scope.numUsers = UserLS.numUsers('s2g_users');
+  $scope.numUsers = UserLS.numUsers();
   console.log('in isRegCtrl # of users = ' + $scope.numUsers);
   if ($scope.numUsers==0){
     $state.go('register');
   } else if($scope.numUsers==1){
+
+  } else {
 
   }
   console.log($scope.numUsers);
@@ -130,3 +142,17 @@ stuffAppControllers.controller('ConfigCtrl', function ($scope) {
   $scope.dog = 'kazzy';
 
 });
+stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  function ($scope, UserLS) {
+  $scope.username='';
+  $scope.dog = 'piper';
+  $scope.output = '';
+  $scope.listAll = function(){
+    $scope.output=UserLS.getAll();
+  }; 
+  $scope.find = function(){
+    $scope.output=UserLS.getUser($scope.username);
+  };  
+  $scope.del = function(){
+    $scope.output=UserLS.delUser($scope.username);
+  };
+}]);

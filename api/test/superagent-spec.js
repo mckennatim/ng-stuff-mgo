@@ -100,6 +100,15 @@ describe('superagent:', function(){
           done()
         })
     })
+
+    it('GETs a users/id/:id', function(done){
+      superagent.get(httpLoc+'users/id/4')
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.id).to.eql(4)
+          done()
+        })
+    })
        
     it('GETs username is already registered for isUser/:tim7', function(done){
       superagent.get(httpLoc+'isUser/'+name)
@@ -111,9 +120,9 @@ describe('superagent:', function(){
     })
     it('rejects POST of duplicate user/:tim7 ->11000', function(done){
       superagent.post(httpLoc+'users')
-        .send({name:name, email:"tim@sitebuilt.net", lists:[]})
+        .send({name:name, email:"tim@sitebuilt.net", lists:[], apikey: ""})
         .end(function(e,res){
-          //console.log(res.body.code)
+          console.log(res.body.code)
           expect(res.body.code).to.eql(11000)
           done()
         })    
@@ -201,7 +210,7 @@ describe('superagent:', function(){
 /*----------------------------------------------------------------------------------*/
   describe('authentication', function(){
     var agent = superagent.agent();
-    var apikey='1234567';
+    var apikey='Natacitipavuwunexelisaci';
     var ureg='tim';
     var uav='fred';
     var eregtim = 'mckenna.tim@gmail.com';
@@ -212,7 +221,9 @@ describe('superagent:', function(){
         .post('http://localhost:3000/api/authenticate')
         .send({apikey:apikey})
         .end(function(e,res){
-          console.log(res.status)
+          console.log(res.body
+
+            )
           expect(res.body.apikey).to.be(apikey);
           expect(1).to.eql(1);
           done();
@@ -264,14 +275,23 @@ describe('superagent:', function(){
           done()
         })
     })
-    it('gets an [available] to existing user and email', function(done){
+    it('gets available -> posts/creates user expected to return user rec for [timz] ', function(done){
       agent
         .get(httpLoc+'isMatch/?user='+ureg+'z&email=z'+eregtim)
         .end(function(e,res){
           console.log(res.body)
-          expect(res.body.message).to.be('available')
+          expect(res.body[0].combIs).to.be('available')
           done()
         })
     })
+    it('DELs users/:name from users->success=1', function(done){
+      superagent.del(httpLoc+'users/'+ureg+'z')
+        .end(function(e, res){
+          console.log(res.body)
+          expect(e).to.eql(null)
+          expect(res.body).to.eql(1)
+          done()
+        })
+    }) 
   })  
 })

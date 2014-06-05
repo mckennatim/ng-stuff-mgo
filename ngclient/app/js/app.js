@@ -2,7 +2,7 @@
 
 
 // Declare app level module which depends on filters, and services
-angular.module('stuffApp', [
+var StuffApp = angular.module('stuffApp', [
   'ui.router',
   'stuffAppServices',
   'stuffAppControllers'
@@ -15,6 +15,7 @@ config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $st
   $stateProvider.state('config', {url: '/config', templateUrl: 'partials/config.html', controller: 'ConfigCtrl'});
   $stateProvider.state('x', {url: '/', templateUrl: 'partials/shownothing.html', controller: 'IsregCtrl'});
   $stateProvider.state('register', {url: '/register', templateUrl: 'partials/register.html', controller: 'RegisterCtrl'});
+  $stateProvider.state('admin', {url: '/admin', templateUrl: 'partials/admin.html', controller: 'AdminCtrl'});
   $urlRouterProvider.otherwise('/');
 }],
   ['$httpProvider', function($httpProvider) {

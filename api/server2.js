@@ -2,7 +2,7 @@ var express = require('express')
 var nodemailer = require('nodemailer')
 var myut = require('./util/myutil')
 var passport = require('passport')
-var ppstuff = require('./util/ppstuff')
+//var ppstuff = require('./util/ppstuff2')
 var util = require('util')
 var LocalStrategy = require('passport-localapikey').Strategy;
 /*--------------------------------setup db-------------------------------------------*/
@@ -23,6 +23,9 @@ mongoClient.open(function(err, mongoClient) {
           collection.ensureIndex({name:1},{unique:true}, function(err, saved) {
               //console.log(err);
           });
+          collection.ensureIndex({id:-1},{unique:true}, function(err, saved) {
+              //console.log(err);
+          });          
         });
       };
     });  
@@ -48,15 +51,140 @@ var smtpTransport = nodemailer.createTransport("SMTP",{
     }
 });  
 
+/*--------------------------------PASSPORT stuff ------------------------------------*/
 
+
+findById = function(id, fn) {
+  db.collection('users', function(err, collection) {
+    collection.findOne({id:id},function(err, items) {
+      console.log(items);
+      if (items) {
+        fn(null, items);
+      } else {
+        fn(new Error('User ' + id + ' does not exist'));
+      }      
+    });
+  });
+}
+findByUsername = function(name, fn) {
+  db.collection('users', function(err, collection) {
+    collection.findOne({name:name},function(err, items) {
+      console.log(items);
+      if (items.name === name) {
+        return fn(null, items);
+      } 
+      return fn(null, null); 
+    });
+  });
+}
+findByApiKey = function(apikey, fn) {
+  console.log(apikey)
+  db.collection('users', function(err, collection) {
+    collection.findOne({apikey:apikey},function(err, items) {
+      console.log(items);
+      if (items==null){
+        return fn(null, null); 
+      } else if (items.apikey === apikey) {
+        return fn(null, items);
+      } 
+      return fn(null, null);       
+    });
+  });
+}
+ensureAuthenticated = function(req, res, next) {
+  if (req.isAuthenticated()) { 
+    return next(); 
+  }
+  res.redirect('/api/unauthorized')
+}
+/*--------------------------------UTILITY stuff ------------------------------------*/
+var blankUser= {name: '', email: '', lists:[], role:'', timestamp: 1, apikey: ''};
+
+emailKey =function(items){
+  var mailOptions = {
+    from: "Stuff2Get <mckenna.tim@gmail.com>", // sender address
+    to: items.email, // list of receivers
+    subject: "apikey", // Subject line
+    text: "Your apikey for stuff2get is: " +items.apikey + "Return to the web page and enter your apikey to complete registration for your device", // plaintext body
+    html: "<b>Your apikey for stuff2get is: " +items.apikey + "</b><p>Return to the web page and enter your apikey to complete registration for your device </b></p>" // html body
+  }
+  var ret=""
+  smtpTransport.sendMail(mailOptions, function(error, response){
+    if(error){
+        console.log(error);
+        ret = err;
+    }else{
+        console.log("Message sent: " + response.message);
+        ret = {message: 'check your email and come back'} 
+    }
+  });
+  smtpTransport.close(); // shut down the connection pool, no more messages
+  return ret;
+}
+makeKey= function(){
+  return myut.createRandomWord(24);
+}
+createUser=function(usr, res, callback){
+  var usr = usr;
+  console.log('in createUser')
+  console.log(usr)
+  usr.timestamp=Date.now();
+  if (usr.apikey.length < 10){
+    usr.apikey=myut.createRandomWord(24);
+    console.log('creating new user with apikiey')
+  } 
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
+  console.log('just set headers')
+  db.collection('users', function(err, collection) {
+    collection.aggregate([{$group: {_id:0, maxid: {$max:"$id"}}}], function(err, result){
+      var id = result[0].maxid+1;
+      usr.id=id;
+      console.log(usr)
+      console.log('right before insert')
+      var ret ={};
+      collection.insert(usr, function(err, saved) {
+        if(err){
+          console.log(err)
+          ret = err;
+        }else{
+          console.log(saved)
+          console.log('right after insert')
+          ret = saved;
+        };
+        callback(ret);
+      });
+    });
+  });     
+}
+updateUser=function(usr, res){
+  usr.timestamp=Date.now();
+  if (usr.apikey.length < 10){
+    usr.apikey=myut.createRandomWord(24);
+    console.log('updating user, creating new key if needed')
+  } 
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
+  db.collection('users', function(err, collection) {
+    collection.insert(usr, function(err, saved) {
+      if(err){
+        return err;
+      }else{
+        return saved;
+      };
+    });
+  });     
+}
 /*-----------------------------setup passport-----------------------------------*/
+
 passport.serializeUser(function(user, done) {
   done(null, user.id);
 });
 
 passport.deserializeUser(function(id, done) {
-  ppstuff.findById(id, function (err, user) {
+  findById(id, function (err, user) {
     done(err, user);
+    //console.log(user)
   });
 });
 
@@ -64,7 +192,7 @@ passport.use(new LocalStrategy(
   function(apikey, done) {
     // asynchronous verification, for effect...
     process.nextTick(function () {
-      ppstuff.findByApiKey(apikey, function(err, user) {
+      findByApiKey(apikey, function(err, user) {
         if (err) { return done(err); }
         if (!user) { return done(null, false, { message: 'Unknown api ' + apikey }); }
         if (user.apikey!=apikey) { return done(null, false, { message: 'apikey' }); }
@@ -112,9 +240,10 @@ app.post('/api/authenticate',
   passport.authenticate('localapikey', { failureRedirect: '/api/unauthorized'}),
   function(req, res) {
      res.jsonp(req.user)
+     console.log(req.user)
   });
 
-app.get('/api/account', ppstuff.ensureAuthenticated, function(req, res){  
+app.get('/api/account', ensureAuthenticated, function(req, res){  
   res.jsonp(req.user)
 });
 
@@ -127,25 +256,24 @@ app.get('/api/users', function(req, res) {
     console.log('in findLists');
     myut.find(db, 'users', res);
 });
-app.post('/api/users', function(req, res){
-  console.log('in createUser');
+app.post('/api/users', function(req, res){//POST=Create
+  console.log('in post new User');
   console.log(req.body);
-  var body= req.body; 
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
-  db.collection('users', function(err, collection) {
-      collection.insert(body, function(err, saved) {
-          if(err){res.jsonp(err)}else{res.jsonp(saved)};
-      });
-  });      
-}); //POST=Create
+  var user= req.body;
+  createUser(user, res, function(retv){
+    res.jsonp(retv);
+  });
+}); 
 app.del('/api/users/:name', function(req, res){
   console.log('in delete user by name');
   console.log(req.params);
   var name = req.params.name;
   db.collection('users', function(err, collection) {
     collection.remove({name:name}, function(err, saved) {
-      if(err){res.jsonp(err)}else{res.jsonp(saved)};
+      if(err){
+        res.jsonp(err)
+      }else{
+        res.jsonp(saved)};
     });
   });      
 });
@@ -160,13 +288,36 @@ app.get('/api/users/:name', function(req, res) {
         });
     });
 });
+app.get('/api/users/id/:id', function(req, res) {
+    console.log('XXXXXXXXXXXXX in find user by id');
+    console.log(req.params);
+    var id = parseInt(req.params.id);
+    db.collection('users', function(err, collection) {
+      collection.findOne({id:id},function(err, items) {
+        console.log(items);
+        res.jsonp(items);
+      });
+    });
+});
+app.get('/api/users/apikey/:apikey', function(req, res) {
+    console.log('in find user by apikey');
+    console.log(req.params);
+    var apikey = req.params.apikey;
+    db.collection('users', function(err, collection) {
+      collection.findOne({apikey:apikey},function(err, items) {
+        console.log(items);
+        res.jsonp(items);
+      });
+    });
+});
 app.get('/api/isUser/:name', function(req, res) {
     console.log('in isUser by name');
-    var name = req.params.name;
+    var name = req.params.name.toLowerCase();
+    console.log(name)
     db.collection('users', function(err, collection) {
         collection.findOne({name:name},function(err, items) {
           console.log(items)            
-            if(items != null && items.name==req.params.name){
+            if(items != null && items.name==name){
               console.log('is registered')
               res.jsonp({message: ' already registered'})
             } else {
@@ -177,25 +328,42 @@ app.get('/api/isUser/:name', function(req, res) {
 });
 app.get('/api/isMatch/', function(req, res) {
   console.log('in isMatch');
-  var user= req.query.user;
-  var email= req.query.email;
+  var name= req.query.user.toLowerCase();
+  var email= req.query.email.toLowerCase();
+  var apikey ="";
+  console.log(name +' ' +email)
   db.collection('users', function(err, collection) {
     var andLen =0;
     var orLen=0;
-    collection.find({name:user, email:email}).toArray(function(err, items) {
-      console.log(items)  
-      console.log(items.length)
-      andLen = items.length
-      collection.find({$or: [{name:user}, {email:email}]}).toArray(function(err, items) {
-        console.log(items)  
-        console.log(items.length)
-        orLen = items.length
+    var user ={}
+    collection.find({name:name, email:email}).toArray(function(err, user) {
+      console.log(user)  
+      console.log(user.length)
+      andLen = user.length
+      collection.find({$or: [{name:name}, {email:email}]}).toArray(function(err, oitems) {
+        console.log(oitems)  
+        console.log(oitems.length)
+        orLen = oitems.length
         if (andLen+orLen==0){
-          res.jsonp({message: 'available'});
-          console.log('available')                   
+          //res.jsonp({message: 'available'});
+          console.log('available') 
+          apikey= makeKey();
+          var user = blankUser;
+          user.name = name;
+          user.email=email;
+          createUser(user, res, function(retv){
+            console.log('in callback')
+            console.log(retv)
+            emailKey(retv[0])
+            res.jsonp({combIs:'available', userRec:'created', email:'sent'});
+          });                 
         } else if(andLen==1 & orLen==1){
           res.jsonp({message: 'match'});                   
-          console.log('match')                   
+          console.log('match') 
+          console.log(user)
+          //getKey or makeKey
+          //updateUser
+          //emailKey                  
         } else {
           res.jsonp({message: 'conflict'});                   
           console.log('conflict')                   
@@ -205,33 +373,14 @@ app.get('/api/isMatch/', function(req, res) {
   });    
 });
 app.get('/api/emailKey/:name', function(req, res) {
-    console.log('in emailKey by name');
-    var name = req.params.name;
-    db.collection('users', function(err, collection) {
-        collection.findOne({name:name},function(err, items) {
-          console.log(items);
-          var mailOptions = {
-            from: "Stuff2Get <mckenna.tim@gmail.com>", // sender address
-            to: items.email, // list of receivers
-            subject: "apikey", // Subject line
-            text: "Your apikey for stuff2get is: " +items.apikey + "Return to the web page and enter your apikey to complete registration for your device", // plaintext body
-            html: "<b>Your apikey for stuff2get is: " +items.apikey + "</b><p>Return to the web page and enter your apikey to complete registration for your device </b></p>" // html body
-        }
-
-        // send mail with defined transport object
-        smtpTransport.sendMail(mailOptions, function(error, response){
-            if(error){
-                console.log(error);
-            }else{
-                console.log("Message sent: " + response.message);
-            }
-        smtpTransport.close(); // shut down the connection pool, no more messages
-        });
-          if(err){res.jsonp(err)}else{
-            res.jsonp({message: 'check your email and come back'})                 
-          };
-        });
+  console.log('in emailKey by name');
+  var name = req.params.name;
+  db.collection('users', function(err, collection) {
+    collection.findOne({name:name},function(err, items) {
+      console.log(items);
+      res.jsonp(emailKey(items));
     });
+  });
 });
 app.put('/api/users/:name/:lid', function(req, res){
   console.log('in addList2user');
@@ -250,8 +399,10 @@ app.put('/api/users/:name/:lid', function(req, res){
         db.collection('users', function(err, collection) {
           collection.find({name:name},{lists:{$elemMatch:{lid:lid}}}).toArray(function(err,userLid){
             //console.log(userLid[0].lists==undefined)
-            //console.log(userLid[0].lists)
-            if (err){
+            console.log(userLid)
+            if(userLid.length==0){
+              res.jsonp('user doesnt exist');
+            } else if (err){
               ret.jsonp(err)
             }else if(userLid[0].lists!=undefined){
               console.log('!undefined-list already included');
@@ -331,3 +482,4 @@ app.put('/api/lists/:lid', function(req,res){
 
 app.listen(3000);
 console.log('listening on port 3000');
+

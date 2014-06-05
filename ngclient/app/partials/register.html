@@ -2,13 +2,13 @@
 </br></br></br></br>
 
 <div class="input-group panel panel-default">
-hey {{username}}: {{userNameIs}}
+Hey {{username}}: {{userNameIs}}
 <div class='panel-body'>
 
 <form name='regForm' ng-submit="submit()" >
   <div class='form-group'>
     <label>username:</label>{{isUser}}  
-    <input type="text" class="form-control" ng-blur="doesNameExist()" ng-model='username' name='nameInp' ng-minlength="3" ng-pattern="nameValid" required ng-trim="false">
+    <input type="text" class="form-control" ng-blur="doesNameExist()" ng-focus="userNameIs=''"ng-model='username' name='nameInp' ng-minlength="3" ng-pattern="nameValid" required ng-trim="false">
     <span class="error" ng-show="regForm.nameInp.$error.required">*</span>
     <span class="error" ng-show="regForm.nameInp.$error.pattern">single word only</span>
     <span class="error" ng-show="regForm.nameInp.$error.minlength">too short</span>

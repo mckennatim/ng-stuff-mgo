@@ -65,38 +65,66 @@ stuffAppServices.factory('UsersData', function($http) {
 });
 stuffAppServices.factory('UserLS', function() {
   return {
+    key: 's2g_users',
     users: {},
     blankUsers: {lastLive:0, userList:[]},
-    getAll: function (key) {    
+    blankUser: {name: '', email: '', lists:[], role:'', timestamp: 1, apikey: ''},
+    getAll: function () {
+      //console.log(localStorage)    
       var ret = {};
-      if(!localStorage.getItem(key)){
+      if(!localStorage.getItem(this.key)){
         ret = this.blankUsers;
         //console.log(JSON.stringify(ret))
-        localStorage.setItem(key, JSON.stringify(ret));
+        localStorage.setItem(this.key, JSON.stringify(ret));
       } else {
-        //console.log(localStorage.getItem(key));
+        //console.log(localStorage.getItem(this.key));
         //console.log(JSON.parse(localStorage.getItem(key)).userList);
-        ret=JSON.parse(localStorage.getItem(key));
+        ret=JSON.parse(localStorage.getItem(this.key));
       }
       return ret;
     },
-    getUser: function (user,key) {   
-      var ret = this.getAll(key)
+    getUser: function (user) {   
+      var ret = this.getAll()
       return ret[user];
     },    
-    postUser: function(user,key) {
-      var al = this.getAll(key);
+    postUser: function(user) {
+      var al = this.getAll();
       //console.log(user.name)
       al.userList.push(user.name)
       al.userList = _.uniq(al.userList)
       al[user.name]=user 
-      localStorage.setItem(key, JSON.stringify(al));
+      localStorage.setItem(this.key, JSON.stringify(al));
       return al
     },
-    numUsers: function(key){
-      var bl = this.getAll(key);
+    numUsers: function(){
+      var bl = this.getAll();
       console.log(bl)
       return bl.userList.length;
+    },
+    update: function(name, email, apikey){
+      console.log(name+email+apikey);
+      var usr = this.getUser(name);
+      console.log(usr)
+      if (usr){
+        console.log('user ex in LS')
+      } else{
+        console.log('new to LS')
+        usr=this.blankUser;
+        usr.name=name;
+        usr.email=email;
+        usr.apikey=apikey;
+        this.postUser(usr);
+      }
+    },
+    delUser: function(name){
+      var ulist = this.getAll();
+      delete ulist[name]
+      var index = ulist.userList.indexOf(name);    
+      if (index !== -1) {
+          ulist.userList.splice(index, 1);
+      }
+      localStorage.setItem(this.key, JSON.stringify(ulist));
+      return ulist;
     }
   }
 });
