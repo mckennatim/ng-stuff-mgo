@@ -52,7 +52,7 @@ var smtpTransport = nodemailer.createTransport("SMTP",{
 });  
 console.log(smtpTransport.options.service)
 
-/*--------------------------------PASSPORT stuff ------------------------------------*/
+/*---------------------------------PASSPORT stuff ------------------------------------*/
 
 
 findById = function(id, fn) {

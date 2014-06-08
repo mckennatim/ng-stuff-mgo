@@ -1,7 +1,7 @@
 'use strict';
 
 var httpLoc = 'http://10.0.1.24:3000/api/';
-//var httpLoc = 'http://localhost:3000/api/';
+//var httpLoc = 'http://localhodst:3000/api/';
 
 /* Controlrs */
 var stuffAppControllers = angular.module('stuffAppControllers', []);
