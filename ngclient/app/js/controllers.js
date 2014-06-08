@@ -1,6 +1,7 @@
 'use strict';
 
 var httpLoc = 'http://10.0.1.24:3000/api/';
+//var httpLoc = 'http://localhost:3000/api/';
 
 /* Controlrs */
 var stuffAppControllers = angular.module('stuffAppControllers', []);
@@ -54,19 +55,25 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
 });
 
 stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthService, UserLS) {
+  console.log(UserLS.users.lastLive)
   $scope.dog = 'butler';
   $scope.nameValid =/^\s*\w*\s*$/
-  $scope.username=''
-  $scope.email=''
-  $scope.apikey=''
-  $scope.user={};
+  $scope.user = UserLS.getUserIdx(UserLS.users.lastLive)  || UserLS.blankUser;
+  console.log($scope.user);
+  $scope.state=UserLS.getRegState();
+  console.log($scope.state);
+  $scope.username=$scope.user.name || '';
+  $scope.email=$scope.user.email || '';
+  $scope.apikey=$scope.user.apikey || '';
   $scope.isuUser='';
   $scope.isMatch='';
   $scope.userNameIs=''
-  $scope.state='Register';
   console.log('in register control')
   $scope.submit = function(){
-    $scope.user = {username: $scope.username, email: $scope.email, lists:[]}
+    $scope.user.name = $scope.username
+    $scope.user.email = $scope.email
+    $scope.user.apikey = $scope.apikey
+    //$scope.user = {username: $scope.username, email: $scope.email, apikey: $scope.apikey, lists:[]}
     console.log($scope.user)
     if ($scope.state=='Register'){
       console.log('new user to LS & db & get apikey sent')
@@ -76,7 +83,8 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
         response = data.message;
         if (['available', 'match'].indexOf(response)>-1){
           console.log('resonse is either available or match')
-          $scope.updateLS();
+          UserLS.postUser($scope.user, 'Enter apikey');
+          $scope.state=UserLS.getRegState(); 
           $scope.userNameIs = response;
         } else if(response=='conflict'){
           console.log('response is conflict')
@@ -86,18 +94,24 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
         console.log(data)
         response = data;
       })
-
-    }else if ($scope.state = 'Get your key'){
-      console.log('new user to LS and get apikey sent')
-    } else if($scope.state = 'Enter your apikey'){
-      console.log('entering key in user record')
+    } else if($scope.state == 'Enter apikey'){
+      console.log('ok going to authenticate');
+      AuthService.auth($scope.apikey).then(function(data){
+        console.log(data);
+        if (data.name==$scope.user.name){
+          $scope.user = data;
+          UserLS.postUser(data, 'Authenticated');   
+          $scope.state=UserLS.getRegState();       
+        }
+      }, function(data){//if error
+        console.log(data)
+        response = data;
+      });
     }
   } 
-  $scope.updateLS= function(){
-    $scope.user=UserLS.update($scope.username, $scope.email, $scope.apikey);
-  }
   $scope.doesNameExist= function(){
     console.log($scope.username+' changed')
+    $scope.state='Register'
     $scope.userNameIs = ' will check status...'
     AuthService.isUser($scope.username).then(function(data){
       console.log(data)
@@ -110,15 +124,28 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
   } 
 });
 
-stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS) {
+stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, AuthService) {
   $scope.numUsers = UserLS.numUsers();
+  $scope.user = UserLS.getUserIdx(UserLS.users.lastLive)  || UserLS.blankUser;
   console.log('in isRegCtrl # of users = ' + $scope.numUsers);
+  console.log($scope.user)
   if ($scope.numUsers==0){
     $state.go('register');
-  } else if($scope.numUsers==1){
-
-  } else {
-
+  } else if ($scope.numUsers==1 & $scope.user.apikey.length<10){
+    UserLS.setRegState('Enter apikey');
+    $state.go('register');
+  } else if ($scope.numUsers==1){//and there is apikey
+    console.log('ok going to authenticate');
+    AuthService.auth($scope.user.apikey).then(function(data){
+      console.log(data);
+      if (data.name==$scope.user.name){
+        $scope.user = data;
+        UserLS.postUser(data, 'Authenticated');          
+      }
+    }, function(data){//if error
+      console.log(data)
+      response = data;
+    });
   }
   console.log($scope.numUsers);
 });

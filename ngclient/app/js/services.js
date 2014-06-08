@@ -64,11 +64,24 @@ stuffAppServices.factory('UsersData', function($http) {
   }
 });
 stuffAppServices.factory('UserLS', function() {
+  var key = 's2g_users';
+  var blankUsers= {lastLive:0, regState: 'Register', userList:[]};
+  var getAll=function(){
+    var ret = {};
+    if(!localStorage.getItem(key)){
+      ret = blankUsers;
+      localStorage.setItem(key, JSON.stringify(ret));
+    } else {
+      ret=JSON.parse(localStorage.getItem(key));
+    }
+    return ret;    
+  }
+  var users = getAll();
   return {
-    key: 's2g_users',
-    users: {},
-    blankUsers: {lastLive:0, userList:[]},
+    key: key,
+    blankUsers: blankUsers,
     blankUser: {name: '', email: '', lists:[], role:'', timestamp: 1, apikey: ''},
+    currentUser: this.blankUser,
     getAll: function () {
       //console.log(localStorage)    
       var ret = {};
@@ -83,15 +96,32 @@ stuffAppServices.factory('UserLS', function() {
       }
       return ret;
     },
+    users: users,
+    setRegState: function(st){
+      var ret = this.getAll();
+      ret.regState = st;
+      localStorage.setItem(this.key, JSON.stringify(ret));
+    },
+    getRegState: function(){
+      var ret = this.getAll();
+      return ret.regState;
+    },
     getUser: function (user) {   
       var ret = this.getAll()
       return ret[user];
-    },    
-    postUser: function(user) {
+    },  
+    getUserIdx: function(idx){
+      var ret = this.getAll();
+      this.currentUser = ret[ret.userList[idx]];
+      return this.currentUser;
+    },  
+    postUser: function(user, regState) {
       var al = this.getAll();
       //console.log(user.name)
       al.userList.push(user.name)
       al.userList = _.uniq(al.userList)
+      al.lastLive = al.userList.indexOf(user.name)
+      al.regState = regState //'Enter apikey', 'Register' or 'Authenticated'
       al[user.name]=user 
       localStorage.setItem(this.key, JSON.stringify(al));
       return al
@@ -100,21 +130,6 @@ stuffAppServices.factory('UserLS', function() {
       var bl = this.getAll();
       console.log(bl)
       return bl.userList.length;
-    },
-    update: function(name, email, apikey){
-      console.log(name+email+apikey);
-      var usr = this.getUser(name);
-      console.log(usr)
-      if (usr){
-        console.log('user ex in LS')
-      } else{
-        console.log('new to LS')
-        usr=this.blankUser;
-        usr.name=name;
-        usr.email=email;
-        usr.apikey=apikey;
-        this.postUser(usr);
-      }
     },
     delUser: function(name){
       var ulist = this.getAll();
@@ -130,6 +145,22 @@ stuffAppServices.factory('UserLS', function() {
 });
 stuffAppServices.factory('AuthService', function($http, $q) {
   return {
+    auth: function(apikey) {
+      var url=httpLoc + 'authenticate/';
+      var deferred = $q.defer();
+      $http.post(url, {apikey:apikey}).   
+        success(function(data, status) {
+          //console.log(data);
+          //console.log(status);
+          deferred.resolve(data);
+        }).
+        error(function(data, status){
+          //console.log(data || "Request failed");
+          //console.log(status);
+          deferred.reject({message: 'server is down'})
+        });
+      return deferred.promise;
+    },
     isUser: function(name) {
       var url=httpLoc + 'isUser/'+name;
       var deferred = $q.defer();

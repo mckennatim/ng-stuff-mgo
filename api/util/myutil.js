@@ -73,10 +73,14 @@ exports.inidata={'lists':{name:'lists', items:[
   {lid:'Woduvu', shops:'drugs', timestamp:1395763172175},
   ]},
  'users':{name:'users',items:[
-  {id:1, name: 'tim', email: 'mckenna.tim@gmail.com', lists:[], role:'admin', timestamp:1399208688, apikey:'Natacitipavuwunexelisaci'},
-  {id:2, name: 'tim7', email: 'mckenna.tim@gmail.com', lists:[], role:'user', timestamp:1399208688, apikey:'Qemavohegoburuxosuqujoga' },
-  {id:3, name: 'peri', email: 'perimckenna@gmail.com', lists:[], role:'user', timestamp:1399208688, apikey: 'Piyopagibatinohovixekadi'},
-  {id:4, name: 'tim2', email: 'mckt_jp@yahoo.com', lists:[], role:'user', timestamp:1399208688, apikiey: 'Sobeqosevewacokejufozeki'}
+  {id:1, name: 'tim', email: 'mckenna.tim@gmail.com', defaultList: 0, 
+    lists:[{
+        "lid" : "Jutebi",
+        "shops" : "groceries"
+    }], role:'admin', timestamp:1399208688, apikey:'Natacitipavuwunexelisaci'},
+  {id:2, name: 'tim7', email: 'mckenna.tim7@gmail.com', defaultList: 0, lists:[], role:'user', timestamp:1399208688, apikey:'Qemavohegoburuxosuqujoga' },
+  {id:3, name: 'peri', email: 'perimckenna@gmail.com', defaultList: 0, lists:[], role:'user', timestamp:1399208688, apikey: 'Piyopagibatinohovixekadi'},
+  {id:4, name: 'tim2', email: 'mckt_jp@yahoo.com', defaultList: 0, lists:[], role:'user', timestamp:1399208688, apikiey: 'Sobeqosevewacokejufozeki'}
   ]}
 }
 

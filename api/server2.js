@@ -115,7 +115,7 @@ emailKey =function(items, callback){
   smtpTransport.sendMail(mailOptions, function(error, response){
     if(error){
         console.log(error);
-        ret = err;
+        ret = error;
     }else{
         console.log("Message sent: " + response.message);
         ret = {message: 'check your email and come back'} 
