@@ -148,7 +148,7 @@ stuffAppServices.factory('AuthService', function($http, $q) {
     auth: function(apikey) {
       var url=httpLoc + 'authenticate/';
       var deferred = $q.defer();
-      $http.post(url, {apikey:apikey}).   
+      $http.post(url, {apikey:apikey}, {withCredentials:true}).   
         success(function(data, status) {
           //console.log(data);
           //console.log(status);
@@ -193,5 +193,25 @@ stuffAppServices.factory('AuthService', function($http, $q) {
         });
       return deferred.promise;
     }    
+  }
+});
+stuffAppServices.factory('ListService', function($http, $q) {
+  return {
+    aList: function(list) {
+      var url=httpLoc + 'lists/'+list;      
+      var deferred = $q.defer();
+      $http.get(url, {withCredentials:true}).   
+        success(function(data, status) {
+          console.log(data);
+          console.log(status);
+          deferred.resolve(data);
+        }).
+        error(function(data, status){
+          console.log(data || "Request failed");
+          console.log(status);
+          deferred.reject({message: 'server is down'})
+        });
+      return deferred.promise;
+    } 
   }
 });

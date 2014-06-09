@@ -138,8 +138,9 @@ createUser=function(usr, res, callback){
     usr.apikey=makeKey();
     console.log('creating new user with apikiey')
   } 
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
+  //res.header("Access-Control-Allow-Origin", "10.0.1.24");
+  //res.header("Access-Control-Allow-Credentials", true);
+  //res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
   console.log('just set headers')
   db.collection('users', function(err, collection) {
     collection.aggregate([{$group: {_id:0, maxid: {$max:"$id"}}}], function(err, result){
@@ -169,8 +170,8 @@ updateUser=function(usr, res, callback){
     usr.apikey=makeKey();
     console.log('creating new key and emailing it')
   } 
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
+  //res.header("Access-Control-Allow-Origin", "*");
+  //res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
   db.collection('users', function(err, collection) {
     collection.update({name: usr.name}, {$set:{email:usr.email, apikey: usr.apikey, timestamp:usr.timestamp}}, function(err, saved) {
     if(err){
@@ -185,6 +186,7 @@ updateUser=function(usr, res, callback){
     });
   });     
 }
+
 /*-----------------------------setup passport-----------------------------------*/
 
 passport.serializeUser(function(user, done) {
@@ -228,9 +230,10 @@ app.configure(function() {
   app.use(app.router);
   app.use(express.static(__dirname + '/../../public'));
 });
-
 app.all('*', function(req,res,next){
-  res.header("Access-Control-Allow-Origin", "*");
+  var htt= req.headers.origin;
+  res.header("Access-Control-Allow-Origin", htt);
+  res.header("Access-Control-Allow-Credentials", true);
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE, OPTIONS');
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-xsrf-token");
   next();
@@ -253,7 +256,8 @@ app.post('/api/authenticate',
      console.log(req.user)
   });
 
-app.get('/api/account', ensureAuthenticated, function(req, res){  
+app.get('/api/account', ensureAuthenticated, function(req, res){ 
+  console.log('in api/account') 
   res.jsonp(req.user)
 });
 
@@ -455,7 +459,7 @@ app.get('/api/lists', function(req, res) {
     console.log('in findLists');
     myut.find(db, 'lists', res);
 });
-app.get('/api/lists/:lid', function(req,res){
+app.get('/api/lists/:lid', ensureAuthenticated, function(req,res){
   console.log('in getList by lid');
   console.log(req.params);
   var lid = req.params.lid;

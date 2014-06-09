@@ -155,20 +155,22 @@ stuffAppControllers.controller('ListCtrl', function ($scope) {
 });
 stuffAppControllers.controller('ListsCtrl', function ($scope) {
   $scope.dog = 'dusty';
-
 });
 stuffAppControllers.controller('UserCtrl', function ($scope) {
   $scope.dog = 'petey';
 
 });
-stuffAppControllers.controller('ShopsCtrl', function ($scope) {
+stuffAppControllers.controller('ShopsCtrl', ['$scope', 'ListService', function ($scope, ListService) {
   $scope.dog = 'fritz';
-
-});
-stuffAppControllers.controller('ConfigCtrl', function ($scope) {
+  ListService.aList('Jutebi').then(function(list){
+    console.log(list);
+    $scope.list = JSON.stringify(list, undefined, 2);
+  });
+}]);
+stuffAppControllers.controller('ConfigCtrl', ['$scope', function ($scope) {
   $scope.dog = 'kazzy';
 
-});
+}]);
 stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  function ($scope, UserLS) {
   $scope.username='';
   $scope.dog = 'piper';

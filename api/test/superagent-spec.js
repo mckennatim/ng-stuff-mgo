@@ -7,9 +7,11 @@ var myut = require('../util/myutil.js');
 var httpLoc = 'http://localhost:3000/api/'
 
 describe('superagent:', function(){
+  var agent = superagent.agent();
   var name = 'tim7';
   var ucnt = 0;
   var listId = 'Jutebi';
+  var apikey='Natacitipavuwunexelisaci';
   var otherListId = 'Vegada';
   var listShops = 'groceries';
   it('GET / should be running and return: please select...', function(done){
@@ -23,7 +25,37 @@ describe('superagent:', function(){
       })    
   })
   describe('users', function(){
-    
+    it('POSTs succeeds for fake user for correct apikey',function(done){
+      agent
+        .post('http://localhost:3000/api/authenticate')
+        .send({apikey:apikey})
+        .end(function(e,res){
+          console.log(res.body
+
+            )
+          expect(res.body.apikey).to.be(apikey);
+          expect(1).to.eql(1);
+          done();
+        })
+    })
+    it('GETs succeeds w userinfo from api/account when authenticated', function(done){
+      agent
+        .get('http://localhost:3000/api/account/')
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.apikey).to.be(apikey);
+          done()
+        })
+    })    
+    it('GETs succeeds api/lists/Jutebi when authenticated', function(done){
+      agent
+        .get(httpLoc+'lists/'+listId)
+        .end(function(e,res){
+          console.log(res.body)
+          expect(res.body.lid).to.be('Jutebi');
+          done()
+        })
+    })        
     it('DELs users/:name from users->success=1', function(done){
       superagent.del(httpLoc+'users/'+name)
         .end(function(e, res){
@@ -178,11 +210,13 @@ describe('superagent:', function(){
           done()
         })
     })
-    it('GETs timestamp for /lists/:lid', function(done){
-      superagent.get(httpLoc+'lists/'+newListId)
+    it('GETs authenticated /lists/:lid', function(done){
+      agent
+        .get(httpLoc+'lists/'+listId)
         .end(function(e,res){
           expect(e).to.be(null)
-          expect(res.body.timestamp).to.be.greaterThan(Date.now()-400)
+          console.log(res.body)
+          expect(res.body.lid).to.be(listId)
           done()
         })
     })
@@ -209,8 +243,6 @@ describe('superagent:', function(){
   })
 /*----------------------------------------------------------------------------------*/
   describe('authentication', function(){
-    var agent = superagent.agent();
-    var apikey='Natacitipavuwunexelisaci';
     var ureg='tim';
     var uav='fred';
     var eregtim = 'mckenna.tim@gmail.com';
